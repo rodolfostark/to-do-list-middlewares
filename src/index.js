@@ -10,19 +10,86 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(
+    user => user.username === username
+  );
+
+  if (!user) {
+    return response.status(404).json({
+      error: 'Mensagem do erro'
+    });
+  }
+
+  request.user = user;
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if (user.pro || (!user.pro && user.todos.length < 10)) {
+    return next();
+  }
+  return response.status(403).json({
+    error: 'Mensagem de erro'
+  });
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+  // Find user from username
+  const user = users.find(
+    user => user.username === username
+  );
+  // Validate if the user fetched exists
+  if (!user) {
+    return response.status(404).json({
+      error: 'Mensagem do erro'
+    });
+  }
+  // Validate if the id is in UUID format
+  if (!validate(id)) {
+    return response.status(400).json({
+      error: 'Mensagem do erro'
+    });
+  }
+  // Fetching the to-do based on the id
+  const todo = user.todos.find(
+    todo => todo.id === id
+  );
+  // Validate if the to-do fetched exists
+  if (!todo) {
+    return response.status(404).json({
+      error: 'Mensagem do erro'
+    });
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  // Validate if the id is in UUID format
+  if (!validate(id)) {
+    return response.status(400).json({
+      error: 'Mensagem do erro'
+    });
+  }
+  const user = users.find(
+    user => user.id === id
+  );
+  // Validate if the user fetched exists
+  if (!user) {
+    return response.status(404).json({
+      error: 'Mensagem do erro'
+    });
+  }
+  request.user = user;
+  return next();
 }
 
 app.post('/users', (request, response) => {
